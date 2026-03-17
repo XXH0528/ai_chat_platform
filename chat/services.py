@@ -13,13 +13,20 @@ def append_user_message(conversation: Conversation, content: str, client_message
     if client_message_id:
         metadata["client_message_id"] = client_message_id
 
-    return Message.objects.create(
+    message = Message.objects.create(
         conversation=conversation,
         role=Message.Role.USER,
         content=content,
         token_count=0,
         metadata=metadata,
     )
+
+    if not conversation.title:
+        if conversation.messages.filter(role=Message.Role.USER).count() == 1:
+            conversation.title = content[:20]
+            conversation.save()
+
+    return message
 
 
 def append_mock_assistant_message(conversation: Conversation, user_content: str) -> Message:

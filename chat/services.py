@@ -13,12 +13,16 @@ def append_user_message(conversation: Conversation, content: str, client_message
     if client_message_id:
         metadata["client_message_id"] = client_message_id
 
+    last_message = conversation.messages.order_by("-sequence_no").first()
+    next_seq = 1 if not last_message else last_message.sequence_no + 1
+
     message = Message.objects.create(
         conversation=conversation,
         role=Message.Role.USER,
         content=content,
         token_count=0,
         metadata=metadata,
+        sequence_no=next_seq,
     )
 
     if not conversation.title:

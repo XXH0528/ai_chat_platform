@@ -69,3 +69,15 @@ class ConversationSendMessageView(APIView):
             },
             status=status.HTTP_201_CREATED
         )
+
+class ConversationArchiveView(APIView):
+    def post(self, request, conversation_id):
+        conversation = get_object_or_404(Conversation, conversation_id=conversation_id)
+
+        conversation.state = "archived"
+        conversation.save()
+
+        return Response({
+            "conversation_id": str(conversation.conversation_id),
+            "state": conversation.state
+        }, status=status.HTTP_200_OK)

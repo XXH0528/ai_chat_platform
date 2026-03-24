@@ -40,6 +40,7 @@ class Message(BaseModel):
     content = models.TextField()
     token_count = models.IntegerField(default=0)
     metadata = models.JSONField(default=dict, blank=True)
+    sequence_no = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.role}:{self.content[:30]}"

@@ -25,8 +25,8 @@ def append_user_message(conversation: Conversation, content: str, client_message
         sequence_no=next_seq,
     )
 
-    if not conversation.title:
-        if conversation.messages.filter(role=Message.Role.USER).count() == 1:
+    if not conversation.title or conversation.title == "新建会话":
+        if next_seq == 1:
             conversation.title = content[:20]
             conversation.save()
 

@@ -30,9 +30,9 @@ class MessageSerializer(serializers.ModelSerializer):
             "content",
             "token_count",
             "metadata",
+            "sequence_no",
             "created_at",
             "updated_at",
-            "sequence_no"，
         ]
 
 

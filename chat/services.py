@@ -37,9 +37,6 @@ def generate_assistant_reply(user_content: str) -> str:
     return f"这是一个模拟回复：你刚刚说的是『{user_content}』。下一节课我们会把这里替换成真正的 LLM 调用。"   
 
 
-def generate_assistant_reply(user_content: str) -> str:
-    return f"这是一个模拟回复：你刚刚说的是『{user_content}』。下一节课我们会把这里替换成真正的 LLM 调用。"
-
 
 def append_mock_assistant_message(conversation: Conversation, user_content: str) -> Message:
     reply = generate_assistant_reply(user_content)

@@ -32,6 +32,7 @@ class MessageSerializer(serializers.ModelSerializer):
             "metadata",
             "created_at",
             "updated_at",
+            "sequence_no"，
         ]
 
 

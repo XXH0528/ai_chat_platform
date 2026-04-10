@@ -4,6 +4,7 @@ from .views import (
     ConversationMessagesView,
     ConversationChatView,
 )
+from .views import HealthCheckView
 
 urlpatterns = [
     path("conversations/", ConversationCreateView.as_view(), name="conversation-create"),
@@ -17,4 +18,5 @@ urlpatterns = [
         ConversationChatView.as_view(),
         name="conversation-chat",
     ),
+    path("health/", HealthCheckView.as_view(), name="health-check"),
 ]

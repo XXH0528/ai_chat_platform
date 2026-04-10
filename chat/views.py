@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+import os
 
 from .models import Conversation, Message
 from .serializers import (
@@ -45,3 +46,18 @@ class ConversationChatView(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+class HealthCheckView(APIView):
+    def get(self, request):
+        api_key = os.getenv("OPENAI_API_KEY")
+
+        if api_key and api_key.startswith("sk-"):
+            llm_mode = "openai"
+        else:
+            llm_mode = "stub"
+
+        return Response({
+            "status": "ok",
+            "llm_mode": llm_mode,
+        })

@@ -30,6 +30,21 @@ def get_recent_rounds(messages, max_rounds=10):
 
     return result
 
+
+def estimate_token_count(text: str) -> int:
+    if not text:
+        return 0
+
+    has_chinese = any('\u4e00' <= ch <= '\u9fff' for ch in text)
+
+    if has_chinese:
+        return len(text)
+    else:
+        return len(text.split())
+
+
+
+
 class ChatService:
     @staticmethod
     @transaction.atomic
@@ -38,7 +53,7 @@ class ChatService:
             conversation=conversation,
             role="user",
             content=content,
-            token_count=0,
+            token_count=estimate_token_count(content),
             metadata={},
         )
 
@@ -61,7 +76,7 @@ class ChatService:
             conversation=conversation,
             role="assistant",
             content=assistant_text,
-            token_count=0,
+            token_count=estimate_token_count(assistant_text),
             metadata={
                 "provider": llm_adapter.__class__.__name__,
             },

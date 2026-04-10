@@ -69,8 +69,23 @@ class ChatService:
 
         llm_messages = build_chat_messages(recent_messages)
 
-        llm_adapter = get_llm_adapter()
-        assistant_text = llm_adapter.generate(llm_messages)
+        try:
+            llm_adapter = get_llm_adapter()
+            assistant_text = llm_adapter.generate(llm_messages)
+
+            assistant_metadata = {
+                "provider": llm_adapter.__class__.__name__,
+                "status": "success",
+            }
+
+        except Exception as e:
+            assistant_text = "当前模型服务暂时不可用，请稍后重试。"
+
+            assistant_metadata = {
+                "status": "error",
+                "error": str(e),
+                "error_type": e.__class__.__name__,
+            }
 
         assistant_message = Message.objects.create(
             conversation=conversation,

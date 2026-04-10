@@ -1,14 +1,20 @@
 from django.urls import path
 from .views import (
     ConversationCreateView,
-    ConversationMessageListView,
-    ConversationSendMessageView,
-    ConversationArchiveView, 
+    ConversationMessagesView,
+    ConversationChatView,
 )
 
 urlpatterns = [
     path("conversations/", ConversationCreateView.as_view(), name="conversation-create"),
-    path("conversations/<uuid:conversation_id>/messages/", ConversationMessageListView.as_view(), name="conversation-messages"),
-    path("conversations/<uuid:conversation_id>/send/", ConversationSendMessageView.as_view(), name="conversation-send"),
-    path("conversations/<uuid:conversation_id>/archive/", ConversationArchiveView.as_view()),
+    path(
+        "conversations/<int:conversation_id>/messages/",
+        ConversationMessagesView.as_view(),
+        name="conversation-messages",
+    ),
+    path(
+        "conversations/<int:conversation_id>/chat/",
+        ConversationChatView.as_view(),
+        name="conversation-chat",
+    ),
 ]

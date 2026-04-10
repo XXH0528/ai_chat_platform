@@ -1,55 +1,74 @@
+from django.db import transaction
 from .models import Conversation, Message
+from .prompts import build_chat_messages
+from .llm import get_llm_adapter
 
 
-def create_conversation(title: str = "") -> Conversation:
-    title = (title or "").strip()
-    if not title:
-        title = "新建会话"
-    return Conversation.objects.create(title=title)
+def get_recent_rounds(messages, max_rounds=10):
+    rounds = []
+    current_round = []
 
+    for msg in reversed(messages):
+        if msg.role not in ["user", "assistant"]:
+            continue
 
-def append_user_message(conversation: Conversation, content: str, client_message_id: str = "") -> Message:
-    metadata = {}
-    if client_message_id:
-        metadata["client_message_id"] = client_message_id
+        if msg.role == "assistant":
+            current_round = [msg]
 
-    last_message = conversation.messages.order_by("-sequence_no").first()
-    next_seq = 1 if not last_message else last_message.sequence_no + 1
+        elif msg.role == "user":
+            if current_round:
+                current_round.insert(0, msg)
+                rounds.append(current_round)
+                current_round = []
 
-    message = Message.objects.create(
-        conversation=conversation,
-        role=Message.Role.USER,
-        content=content,
-        token_count=0,
-        metadata=metadata,
-        sequence_no=next_seq,
-    )
+        if len(rounds) >= max_rounds:
+            break
 
-    if not conversation.title or conversation.title == "新建会话":
-        if next_seq == 1:
+    result = []
+    for r in reversed(rounds):
+        result.extend(r)
+
+    return result
+
+class ChatService:
+    @staticmethod
+    @transaction.atomic
+    def send_user_message_and_generate_reply(conversation: Conversation, content: str):
+        user_message = Message.objects.create(
+            conversation=conversation,
+            role="user",
+            content=content,
+            token_count=0,
+            metadata={},
+        )
+
+        if conversation.title == "新会话":
             conversation.title = content[:20]
-            conversation.save()
-
-    return message
-
-
-def generate_assistant_reply(user_content: str) -> str:
-    return f"这是一个模拟回复：你刚刚说的是『{user_content}』。下一节课我们会把这里替换成真正的 LLM 调用。"   
+            conversation.save(update_fields=["title", "updated_at"])
 
 
 
-def append_mock_assistant_message(conversation: Conversation, user_content: str) -> Message:
-    reply = generate_assistant_reply(user_content)
+        all_messages = list(Message.objects.filter(conversation=conversation).order_by("created_at", "id"))
 
-    last_message = conversation.messages.order_by("-sequence_no").first()
-    next_seq = 1 if not last_message else last_message.sequence_no + 1
+        recent_messages = get_recent_rounds(all_messages, max_rounds=10)
 
-    return Message.objects.create(
-        conversation=conversation,
-        role=Message.Role.ASSISTANT,
-        content=reply,
-        token_count=0,
-        metadata={"mock": True},
-        sequence_no=next_seq,
-    )
+        llm_messages = build_chat_messages(recent_messages)
+
+        llm_adapter = get_llm_adapter()
+        assistant_text = llm_adapter.generate(llm_messages)
+
+        assistant_message = Message.objects.create(
+            conversation=conversation,
+            role="assistant",
+            content=assistant_text,
+            token_count=0,
+            metadata={
+                "provider": llm_adapter.__class__.__name__,
+            },
+        )
+
+        return {
+            "user_message": user_message,
+            "assistant_message": assistant_message,
+        }
 

@@ -42,5 +42,8 @@ class Message(BaseModel):
     metadata = models.JSONField(default=dict, blank=True)
     sequence_no = models.IntegerField(default=0)
 
+    class Meta:
+        ordering = ["created_at", "id"]
+
     def __str__(self):
         return f"{self.role}:{self.content[:30]}"

@@ -5,37 +5,23 @@ from .models import Conversation, Message
 class ConversationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Conversation
-        fields = [
-            "conversation_id",
-            "title",
-            "state",
-            "created_at",
-            "updated_at",
-        ]
-
-
-class CreateConversationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Conversation
-        fields = ["title"]
+        fields = ["id", "title", "state", "created_at", "updated_at"]
 
 
 class MessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
         fields = [
-            "message_id",
+            "id",
             "conversation",
             "role",
             "content",
             "token_count",
             "metadata",
-            "sequence_no",
             "created_at",
-            "updated_at",
         ]
+        read_only_fields = ["id", "token_count", "metadata", "created_at"]
 
 
-class SendMessageSerializer(serializers.Serializer):
+class SendChatMessageSerializer(serializers.Serializer):
     content = serializers.CharField()
-    client_message_id = serializers.CharField(required=False, allow_blank=True)

@@ -1,49 +1,63 @@
 from django.db import models
-import uuid
 
 
-class BaseModel(models.Model):
+class Conversation(models.Model):
+    title = models.CharField(max_length=255, blank=True, default="新会话")
+    state = models.CharField(max_length=50, default="active")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        abstract = True
-
-
-class Conversation(BaseModel):
-    class State(models.TextChoices):
-        ACTIVE = "active", "Active"
-        ARCHIVED = "archived", "Archived"
-
-    conversation_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    title = models.CharField(max_length=255, blank=True, default="")
-    state = models.CharField(max_length=32, choices=State.choices, default=State.ACTIVE)
-
     def __str__(self):
-        return f"{self.conversation_id} -{self.title or 'Untitled'}"
+        return f"Conversation(id={self.id}, title={self.title})"
 
 
-class Message(BaseModel):
-    class Role(models.TextChoices):
-        USER = "user", "User"
-        ASSISTANT = "assistant", "Assistant"
-        SYSTEM = "system", "System"
-        TOOL = "tool", "Tool"
+class Message(models.Model):
+    ROLE_CHOICES = [
+        ("system", "system"),
+        ("user", "user"),
+        ("assistant", "assistant"),
+        ("tool", "tool"),
+    ]
 
-    message_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     conversation = models.ForeignKey(
         Conversation,
+        related_name="messages",
         on_delete=models.CASCADE,
-        related_name="messages"
     )
-    role = models.CharField(max_length=32, choices=Role.choices)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     content = models.TextField()
     token_count = models.IntegerField(default=0)
     metadata = models.JSONField(default=dict, blank=True)
-    sequence_no = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["created_at", "id"]
 
     def __str__(self):
-        return f"{self.role}:{self.content[:30]}"
+        return f"Message(id={self.id}, role={self.role})"
+
+
+class ToolCall(models.Model):
+    STATUS_CHOICES = [
+        ("pending", "pending"),
+        ("running", "running"),
+        ("success", "success"),
+        ("failed", "failed"),
+    ]
+
+    conversation = models.ForeignKey(
+        Conversation,
+        related_name="tool_calls",
+        on_delete=models.CASCADE,
+    )
+    tool_name = models.CharField(max_length=100)
+    request_args = models.JSONField(default=dict, blank=True)
+    response_payload = models.JSONField(default=dict, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    latency_ms = models.IntegerField(default=0)
+    error_message = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"ToolCall(id={self.id}, tool_name={self.tool_name}, status={self.status})"

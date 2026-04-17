@@ -2,9 +2,9 @@ from django.urls import path
 from .views import (
     ConversationCreateView,
     ConversationMessagesView,
-    ConversationChatView,
+    ConversationAgentChatView,
+    ConversationAgentStreamView,
 )
-from .views import HealthCheckView
 
 urlpatterns = [
     path("conversations/", ConversationCreateView.as_view(), name="conversation-create"),
@@ -14,9 +14,13 @@ urlpatterns = [
         name="conversation-messages",
     ),
     path(
-        "conversations/<int:conversation_id>/chat/",
-        ConversationChatView.as_view(),
-        name="conversation-chat",
+        "conversations/<int:conversation_id>/agent/chat/",
+        ConversationAgentChatView.as_view(),
+        name="conversation-agent-chat",
     ),
-    path("health/", HealthCheckView.as_view(), name="health-check"),
+    path(
+        "conversations/<int:conversation_id>/agent/stream/",
+        ConversationAgentStreamView.as_view(),
+        name="conversation-agent-stream",
+    ),
 ]

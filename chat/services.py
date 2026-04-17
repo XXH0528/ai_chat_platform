@@ -1,6 +1,6 @@
 from django.db import transaction
 from .models import Conversation, Message
-from .prompts import build_chat_messages
+from .prompts import build_agent_messages
 from .llm import get_llm_adapter
 
 
@@ -67,7 +67,7 @@ class ChatService:
 
         recent_messages = get_recent_rounds(all_messages, max_rounds=10)
 
-        llm_messages = build_chat_messages(recent_messages)
+        llm_messages = build_agent_messages(recent_messages)
 
         try:
             llm_adapter = get_llm_adapter()

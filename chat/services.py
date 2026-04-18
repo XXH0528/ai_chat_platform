@@ -63,7 +63,7 @@ class ChatService:
                     "tool_call": tool_call,
                 }
 
-            if decision.get("type") == "tool_call":
+            elif decision.get("type") == "tool_call":
                 tool_name = decision.get("tool_name")
                 arguments = decision.get("arguments", {})
 
@@ -125,3 +125,34 @@ class ChatService:
                         "assistant_message": assistant_message,
                         "tool_call": tool_call,
                     }
+            else:
+                
+                assistant_message = Message.objects.create(
+                    conversation=conversation,
+                    role="assistant",
+                    content=decision.get("answer", "系统无法解析模型输出"),
+                    token_count=0,
+                    metadata={"reason": "invalid_type"},
+                )
+
+                return {
+                    "user_message": user_message,
+                    "assistant_message": assistant_message,
+                    "tool_call": tool_call,
+                }
+
+
+
+        assistant_message = Message.objects.create(
+            conversation=conversation,
+            role="assistant",
+            content="已达到最大工具调用次数，请稍后再试。",
+            token_count=0,
+            metadata={"reason": "max_steps_exceeded"},
+        )
+
+        return {
+            "user_message": user_message,
+            "assistant_message": assistant_message,
+            "tool_call": tool_call,
+        }

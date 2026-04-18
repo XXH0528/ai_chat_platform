@@ -32,7 +32,7 @@ class GetWeatherTool(BaseTool):
     }
 
     def run(self, arguments: dict):
-        self.validate(arguments)
+        #self.validate(arguments)，删掉到下面进行
         city = arguments["city"]
         return {
             "city": city,
@@ -54,7 +54,7 @@ class SearchDocsTool(BaseTool):
     }
 
     def run(self, arguments: dict):
-        self.validate(arguments)
+        #self.validate(arguments)，原因同weather
         query = arguments["query"]
         return {
             "query": query,
@@ -93,6 +93,38 @@ class ToolRegistry:
     def execute(self, tool_name: str, arguments: dict):
         tool = self.get_tool(tool_name)
         start = time.perf_counter()
-        result = tool.run(arguments)
-        latency_ms = int((time.perf_counter() - start) * 1000)
-        return result, latency_ms
+
+        try:
+            #统一校验，run里删除
+            tool.validate(arguments)
+
+            result = tool.run(arguments)
+
+            latency_ms = int((time.perf_counter() - start) * 1000)
+
+            if latency_ms > 3000:
+                return {
+                    "status": "failed",
+                    "error": "Tool execution timeout",
+                    "error_type": "timeout",
+                }
+
+            return {
+                "status": "success",
+                "result": result,
+                "latency_ms": latency_ms,
+            }
+
+        except ToolExecutionError as e:
+            return {
+                "status": "failed",
+                "error": str(e),
+                "error_type": "validation_error",
+            }
+
+        except Exception as e:
+            return {
+                "status": "failed",
+                "error": str(e),
+                "error_type": "runtime_error",
+            }

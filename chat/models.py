@@ -59,5 +59,7 @@ class ToolCall(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    metadata = models.JSONField(default=dict, blank=True)#作业2新增
+
     def __str__(self):
         return f"ToolCall(id={self.id}, tool_name={self.tool_name}, status={self.status})"

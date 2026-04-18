@@ -76,7 +76,7 @@ class ConversationAgentChatView(APIView):
         serializer = SendChatMessageSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        result = ChatService.run_agent_once(
+        result = ChatService.run_agent_loop(
             conversation=conversation,
             content=serializer.validated_data["content"],
         )
